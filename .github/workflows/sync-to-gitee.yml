@@ -1,9 +1,8 @@
-name: Sync and Build # 工作流名称
+name: Sync and Build
 
-# 触发条件：当向 main 分支推送代码时
 on:
   push:
-    branches: [ main ] 
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -15,27 +14,39 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # 重要：需要写入权限才能 push
+          token: ${{ github.token }}
 
-      # 2. (核心环节) 将 Markdown 文件转换为 HTML
+      # 2. 将 Markdown 文件转换为 HTML
       - name: Convert MD to HTML
         run: |
           sudo apt-get install -y pandoc
-          # 遍历 src 目录下的所有应用文件夹
           for app_dir in src/*; do
-            # 提取应用文件夹名称 (如 app1, app2)
             app_name=$(basename "$app_dir")
-            # 在 dist 目录下创建对应的应用文件夹
             mkdir -p "dist/$app_name"
-            # 查找该应用文件夹下的所有 .md 文件
             for file in "$app_dir"/*.md; do
-              # 提取文件名 (如 privacy_policy, privacy_policy.en)
-              filename=$(basename "$file" .md)
-              # 使用 pandoc 将 .md 转换为 .html
-              pandoc "$file" -o "dist/$app_name/${filename}.html"
+              if [ -f "$file" ]; then
+                filename=$(basename "$file" .md)
+                pandoc "$file" -o "dist/$app_name/${filename}.html"
+              fi
             done
           done
 
-      # 3. 同步到 Gitee (使用 SSH 私钥)
+      # 3. 将生成的 HTML 提交到 GitHub 仓库（关键步骤）
+      - name: Commit generated HTML
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add dist/
+          # 如果有变更则提交，否则跳过
+          if ! git diff --staged --quiet; then
+            git commit -m "chore: auto-generate HTML from MD [skip ci]"
+            git push
+          else
+            echo "No changes to commit"
+          fi
+
+      # 4. 同步到 Gitee
       - name: Sync to Gitee
         uses: wearerequired/git-mirror-action@master
         env:
@@ -44,11 +55,11 @@ jobs:
           source-repo: https://x-access-token:${{ github.token }}@github.com/billwang9527/privacy-policy.git
           destination-repo: git@gitee.com:dotasoft/privacy.git
 
-      # 4. 自动刷新 Gitee Pages
+      # 5. 自动刷新 Gitee Pages
       - name: Build Gitee Pages
         uses: yanglbme/gitee-pages-action@main
         with:
-          gitee-username: 你的Gitee用户名
+          gitee-username: 13617790401
           gitee-password: ${{ secrets.GITEE_PASSWORD }}
-          gitee-repo: 你的Gitee用户名/仓库名 # 注意区分大小写 
-          branch: master # Gitee Pages 部署的分支，通常是 master
+          gitee-repo: dotasoft/privacy
+          branch: main
