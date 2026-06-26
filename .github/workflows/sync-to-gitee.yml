@@ -1,5 +1,9 @@
 name: Sync and Build
 
+# 明确授予写入权限
+permissions:
+  contents: write  # 允许推送代码到仓库
+  
 on:
   push:
     branches: [ main ]
