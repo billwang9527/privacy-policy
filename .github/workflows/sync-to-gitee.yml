@@ -1,0 +1,53 @@
+name: Sync and Build # 工作流名称
+
+# 触发条件：当向 main 分支推送代码时
+on:
+  push:
+    branches: [ main ] 
+
+jobs:
+  sync-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. 迁出 GitHub 仓库代码
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 2. (核心环节) 将 Markdown 文件转换为 HTML
+      - name: Convert MD to HTML
+        run: |
+          sudo apt-get install -y pandoc
+          # 遍历 src 目录下的所有应用文件夹
+          for app_dir in src/*; do
+            # 提取应用文件夹名称 (如 app1, app2)
+            app_name=$(basename "$app_dir")
+            # 在 dist 目录下创建对应的应用文件夹
+            mkdir -p "dist/$app_name"
+            # 查找该应用文件夹下的所有 .md 文件
+            for file in "$app_dir"/*.md; do
+              # 提取文件名 (如 privacy_policy, privacy_policy.en)
+              filename=$(basename "$file" .md)
+              # 使用 pandoc 将 .md 转换为 .html
+              pandoc "$file" -o "dist/$app_name/${filename}.html"
+            done
+          done
+
+      # 3. 同步到 Gitee (使用 SSH 私钥)
+      - name: Sync to Gitee
+        uses: wearerequired/git-mirror-action@master
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.GITEE_SSH_PRIVATE_KEY }}
+        with:
+          source-repo: git@github.com:billwang9527/privacy-policy.git
+          destination-repo: git@gitee.com:dotasoft/privacy-policy.git
+
+      # 4. 自动刷新 Gitee Pages
+      - name: Build Gitee Pages
+        uses: yanglbme/gitee-pages-action@main
+        with:
+          gitee-username: 你的Gitee用户名
+          gitee-password: ${{ secrets.GITEE_PASSWORD }}
+          gitee-repo: 你的Gitee用户名/仓库名 # 注意区分大小写 
+          branch: master # Gitee Pages 部署的分支，通常是 master
