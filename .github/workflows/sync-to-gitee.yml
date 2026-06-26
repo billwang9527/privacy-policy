@@ -4,6 +4,7 @@ name: Sync and Build # 工作流名称
 on:
   push:
     branches: [ main ] 
+  workflow_dispatch:
 
 jobs:
   sync-and-build:
