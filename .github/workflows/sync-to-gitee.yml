@@ -3,7 +3,7 @@ name: Sync and Build
 # 明确授予写入权限
 permissions:
   contents: write  # 允许推送代码到仓库
-  
+
 on:
   push:
     branches: [ main ]
@@ -32,6 +32,13 @@ jobs:
               if [ -f "$file" ]; then
                 filename=$(basename "$file" .md)
                 pandoc "$file" -o "dist/$app_name/${filename}.html"
+
+                # 2. 同时将 .md 转换为纯文本 .txt
+                #    使用 pandoc 的 plain 输出格式，去除所有标记，生成干净文本
+                pandoc "$file" -t plain -o "dist/$app_name/${filename}.txt"
+                
+                # 3. （可选）保留一份原样拷贝，如果你想要完全保持 MD 原始格式的 .md
+                # cp "$file" "dist/$app_name/${filename}.md"
               fi
             done
           done
