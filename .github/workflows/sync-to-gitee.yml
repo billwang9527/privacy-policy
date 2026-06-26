@@ -43,6 +43,7 @@ jobs:
         with:
           source-repo: https://x-access-token:${{ github.token }}@github.com/billwang9527/privacy-policy.git
           destination-repo: git@gitee.com:dotasoft/privacy-policy.git
+          force: true 
 
       # 4. 自动刷新 Gitee Pages
       - name: Build Gitee Pages
