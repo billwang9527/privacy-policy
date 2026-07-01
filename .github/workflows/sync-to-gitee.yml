@@ -64,4 +64,4 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.GITEE_SSH_PRIVATE_KEY }}
         with:
           source-repo: https://x-access-token:${{ github.token }}@github.com/billwang9527/privacy-policy.git
-          destination-repo: git@gitee.com:dotasoft/privacy.git
+          destination-repo: git@gitee.com:dotasoft/privacy-policy.git
