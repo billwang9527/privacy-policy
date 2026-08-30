@@ -2,7 +2,7 @@
 
 **Last Updated**: June 25, 2026
 
-**App Name**: Precision Metronome
+**Precision Metronome** (hereinafter referred to as "this App") is developed and provided by **Beihai Yidian Network Technology Co., Ltd.** 
 
 ---
 
